@@ -1,23 +1,15 @@
-import math
-from sklearn import neighbors
-import pandas as pd
-import numpy as np
 import os
-import os.path
+import math
 import pickle
-from PIL import Image, ImageDraw
+import os.path
+import numpy as np
+import pandas as pd
 import face_recognition
+from sklearn import neighbors
+from PIL import Image, ImageDraw
+from time import localtime, strftime
 from face_recognition.face_recognition_cli import image_files_in_folder
-from picamera import PiCamera
-import keyboard
 
-camera = PiCamera()
-camera.start_preview()
-while(1):
-    if keyboard.is_pressed('c'):
-        camera.capture('/home/pi/project/test/image.jpg')
-        break
-camera.stop_preview()
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
@@ -61,41 +53,13 @@ def predict(X_img_path, knn_clf=None, model_path=None, distance_threshold=0.6):
     # Predict classes and remove classifications that aren't within the threshold
     return [(pred, loc) if rec else ("unknown", loc) for pred, loc, rec in zip(knn_clf.predict(faces_encodings), X_face_locations, are_matches)]
 
-"""
-def show_prediction_labels_on_image(img_path, predictions):
-    
-    Shows the face recognition results visually.
-    :param img_path: path to image to be recognized
-    :param predictions: results of the predict function
-    :return:
-    
-    pil_image = Image.open(img_path).convert("RGB")
-    draw = ImageDraw.Draw(pil_image)
 
-    for name, (top, right, bottom, left) in predictions:
-        # Draw a box around the face using the Pillow module
-        draw.rectangle(((left, top), (right, bottom)), outline=(0, 0, 255))
-
-        # There's a bug in Pillow where it blows up with non-UTF-8 text
-        # when using the default bitmap font
-        name = name.encode("UTF-8")
-
-        # Draw a label with a name below the face
-        text_width, text_height = draw.textsize(name)
-        draw.rectangle(((left, bottom - text_height - 10), (right, bottom)), fill=(0, 0, 255), outline=(0, 0, 255))
-        draw.text((left + 6, bottom - text_height - 5), name, fill=(255, 255, 255, 255))
-
-    # Remove the drawing library from memory as per the Pillow docs
-    del draw
-
-    # Display the resulting image
-    pil_image.show()"""
 
 
 for image_file in os.listdir("test"):
         full_file_path = os.path.join("test", image_file)
-        att = {'Name' : []}
-        df=pd.DataFrame(att)
+    
+        presents=[]
 
         print("Looking for faces in {}".format(image_file))
 
@@ -105,11 +69,33 @@ for image_file in os.listdir("test"):
 
         # Print results on the console
         for name, (top, right, bottom, left) in predictions:
-            #print("- Found {} at ({}, {})".format(name, left, top))
-            df = df.append({'Name': name}, ignore_index=True)
+            presents.append(name)
             
 
         # Display results overlaid on an image
+      
         #show_prediction_labels_on_image(os.path.join("test", image_file), predictions)
-df.to_csv('Attandance.csv', mode='a')
-print(df)
+# Data cleaning
+presents = list(set(presents))
+OF = pd.read_csv('Attandance.csv',usecols=["Name"])
+OF=OF['Name'].to_list()
+# Generating attendance list
+att=[]
+for i in range(len(OF)):
+    for j in range(len(presents)):
+        if OF[i]==presents[j]:
+            a=1
+            break
+        else:
+            a=0
+            
+    if a==1:
+        att.append('1')
+    else:
+        att.append('0')
+#Creating dataframe
+present_time = strftime("%d %b %Y %H:%M:%S", localtime())
+df= pd.read_csv('Attandance.csv',index_col=0)
+df[present_time]=att
+df.to_csv('Attandance.csv', mode='w' )
+print("done")
