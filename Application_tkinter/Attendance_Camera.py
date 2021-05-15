@@ -24,13 +24,14 @@ class App:
     def __init__(self,window,video_source=0):
         self.window = window
         self.window.title("Attendance Camera")
+        self.window.attributes('-fullscreen', True)
         self.video_source = video_source
 
          # open video source (by default this will try to open the computer webcam)
         self.vid = MyVideoCapture(self.video_source)
 
          # Create a canvas that can fit the above video source size
-        self.canvas = tkinter.Canvas(window, width = self.vid.width, height = self.vid.height)
+        self.canvas = tkinter.Canvas(window, width = 480, height = 270)
         self.canvas.pack()
 
          # Button that lets the user take a snapshot
@@ -156,6 +157,7 @@ class App:
         df= pd.read_csv('Attendance.csv',index_col=0)
         
         root = tkinter.Tk()
+        root.geometry('480x320')
         root.title('LOGS')
 
         frame = tkinter.Frame(root)
@@ -176,6 +178,8 @@ class MyVideoCapture:
          # Get video source width and height
         self.width = self.vid.get(cv2.CAP_PROP_FRAME_WIDTH)
         self.height = self.vid.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        print(self.width)
+        print(self.height)
  
     def get_frame(self):
         if self.vid.isOpened():
